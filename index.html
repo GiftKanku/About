@@ -281,38 +281,46 @@ Hello! My name is Gift Kanku. I am a passionate and curious individual who loves
 
   <script>
     // Navigation routing
+
     const routes=['about','education','work','certs','learning','planned','projects'];
-    const buttons=document.querySelectorAll('nav button');
-    function showRoute(route){
-      routes.forEach(r=>document.getElementById(r).classList.remove('active'));
-      document.getElementById(route).classList.add('active');
-      buttons.forEach(b=>b.classList.toggle('active',b.dataset.route===route));
-    }
-    buttons.forEach(btn=>btn.addEventListener('click',()=>showRoute(btn.dataset.route)));
+  const buttons=document.querySelectorAll('nav button');
+  function showRoute(route){
+    routes.forEach(r=>document.getElementById(r).classList.remove('active'));
+    document.getElementById(route).classList.add('active');
+    buttons.forEach(b=>b.classList.toggle('active',b.dataset.route===route));
+  }
+  buttons.forEach(btn=>btn.addEventListener('click',()=>showRoute(btn.dataset.route)));
 
-    // Status cycling + persistence
-    (function(){
-      const order = ['notstarted','inprogress','completed'];
-      const labelText = {
-        notstarted: 'Not Started',
-        inprogress: 'In Progress',
-        completed: 'Completed'
-      };
+  // --- Edit protection: only works if ?edit=1 is in the URL ---
+  const canEdit = new URLSearchParams(window.location.search).get('edit') === '1';
 
-      // Initialize all statuses
-      const statusEls = document.querySelectorAll('.status');
-      statusEls.forEach(el => {
-        const key = el.dataset.key;
-        if (!key) return;
-        // load saved state or use current class if present, else default notstarted
-        const saved = localStorage.getItem('status-'+key);
-        let state = saved || (el.classList.contains('completed') ? 'completed' : (el.classList.contains('inprogress') ? 'inprogress' : 'notstarted'));
-        // normalize classes
-        el.classList.remove('notstarted','inprogress','completed');
-        el.classList.add(state);
-        el.textContent = labelText[state];
+  // --- Status cycling + persistence ---
+  (function(){
+    const order = ['notstarted','inprogress','completed'];
+    const labelText = {
+      notstarted: 'Not Started',
+      inprogress: 'In Progress',
+      completed: 'Completed'
+    };
 
-        // click handler to cycle
+    const statusEls = document.querySelectorAll('.status');
+    statusEls.forEach(el => {
+      const key = el.dataset.key;
+      if (!key) return;
+
+      const saved = localStorage.getItem('status-'+key);
+      let state = saved || (
+        el.classList.contains('completed') ? 'completed' :
+        el.classList.contains('inprogress') ? 'inprogress' :
+        'notstarted'
+      );
+
+      el.classList.remove('notstarted','inprogress','completed');
+      el.classList.add(state);
+      el.textContent = labelText[state];
+
+      if (canEdit) {
+        // click handler to cycle status
         el.addEventListener('click', () => {
           const idx = order.indexOf(state);
           const next = order[(idx + 1) % order.length];
@@ -323,7 +331,7 @@ Hello! My name is Gift Kanku. I am a passionate and curious individual who loves
           localStorage.setItem('status-'+key, state);
         });
 
-        // right-click quick reset to Not Started (optional handy shortcut)
+        // right-click to reset to Not Started
         el.addEventListener('contextmenu', (ev) => {
           ev.preventDefault();
           state = 'notstarted';
@@ -332,8 +340,12 @@ Hello! My name is Gift Kanku. I am a passionate and curious individual who loves
           el.textContent = labelText[state];
           localStorage.setItem('status-'+key, state);
         });
-      });
-    })();
+      }
+    });
+  })();
+
+
+   
   </script>
 </body>
 </html>
